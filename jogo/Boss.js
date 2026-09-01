@@ -283,7 +283,7 @@ investidaAtaque(player) {
         return;
         }
 
-        if (!player.PodeTomarDano) {
+        if (player.PodeTomarDano == true) {
         return;
         }
 

@@ -44,7 +44,7 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       }
 
       this.DashConfig = {
-      DashCooldown: 120,
+      DashCooldown: 90,
       DashDuration: 16,
       DashTime: 0,
       DashWait: 0,
@@ -122,7 +122,7 @@ class Player extends Phaser.Physics.Arcade.Sprite{
     }
     if(Phaser.Input.Keyboard.JustDown(space) && this.body.blocked.down)
   {
-    this.body.setVelocityY(-800);
+    this.body.setVelocityY(-900);
   }
     /*
     if (!this.anims.isPlaying || this.anims.currentAnim.key !== 'PlayerAndando') {
@@ -361,7 +361,7 @@ Parry(keys, boss, mouse) {
 
       DanoDeContato(boss)
       {
-        if (this.scene.physics.overlap(this, boss) && this.PodeTomarDano == true)
+        if (this.scene.physics.overlap(this, boss) && this.PodeTomarDano == true )
         {
           this.vida -= 10;
         if (this.x < boss.x) {
