@@ -213,6 +213,7 @@ acertarPlayer(player) {
             return;
         }
 
+          this.jaDeuDano = true;
         player.vida -= 7;
 
         if (this.x < player.x) {
@@ -245,9 +246,12 @@ investidaAtaque(player) {
         this.atq.flipX = true;
     }
 
-    this.scene.time.delayedCall(500, () => {
-        this.body.setVelocityX(this.flipX ? -1000 : 1000);
+    this.scene.time.delayedCall(499, () => {
         this.investidaAtiva = true;
+
+            this.scene.time.delayedCall(1, () => {
+
+        this.body.setVelocityX(this.flipX ? -1000 : 1000);
         this.PodeVirar = false; // hitbox de contato ativa durante o avanço
 
         this.scene.time.delayedCall(500, () => {
@@ -259,6 +263,7 @@ investidaAtaque(player) {
 
             this.scene.time.delayedCall(1500, () => {
                 this.PodeAtq = true;
+            });       
             });
         });
     });
@@ -267,7 +272,7 @@ investidaAtaque(player) {
         acertarInvestida(player) {
         if (!this.investidaAtiva || this.jaDeuDano) return;
 
-        this.jaDeuDano = true;
+//        this.jaDeuDano = true;
 
         if(player.ParryConfig.ParryFoi) {
 
@@ -279,14 +284,16 @@ investidaAtaque(player) {
         player.ParryObj.once('animationcomplete-EfeitoParry', () => {
         player.ParryObj.setVisible(false);
         player.ParryConfig.ParryFoi = false;
+          this.jaDeuDano = true;
         });
         return;
         }
 
-        if (player.PodeTomarDano == true) {
+        if (player.PodeTomarDano == false) {
         return;
         }
 
+          this.jaDeuDano = true;
         player.vida -= 12;
         if (this.x < player.x) {
             player.body.setVelocityX(800);
@@ -799,6 +806,8 @@ VerificarHitboxLancas(player) {
 
     escolherAtaque(player) {
 
+    if (!this.PodeAtq || this.EstaAtacando) return;
+    this.PodeAtq = false;
         this.scene.time.delayedCall(170, () => {
 
             if(player.x > this.x)
@@ -872,6 +881,7 @@ VerificarHitboxLancas(player) {
             this.body.setVelocityX(0);
             return;
         }
+
         if (this.EstaAtacando && this.body.velocity.y >= 0 && this.AtingiuAlturaMax == 0)
         {
         this.AtaquePuloAltMax(player);
@@ -899,7 +909,7 @@ VerificarHitboxLancas(player) {
         if (this.EstaAtacando) {
             return;
         }
-        if (this.distanciaX > 300) {
+        if (this.distanciaX > 200) {
             if (this.PodeAtq) {
                 this.escolherAtaque(player);
             } else {

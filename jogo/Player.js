@@ -16,6 +16,7 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       this.atq.setDepth(10);
       this.atq.setAngle(195);
       this.atq.setSize(400,250);
+      this.DanoContatoFoi = false;
 
       this.ParryObj = scene.add.sprite(400,300,'EfeitoParry');
       this.ParryObj.setScale(6.5);
@@ -31,6 +32,13 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       this.Direcao = 1;
       this.VidaAntiga = 0;
       this.jadeudano = false;
+
+      this.CliqueAtaque = false; // flag setada pelo evento, consumida no update
+
+    scene.input.on('pointerdown', (pointer) => {
+      if (pointer.leftButtonDown()) {
+          this.CliqueAtaque = true; // marca que houve um clique novo
+      }});
 
       this.AtaqueConfig = {
       AtaqueCooldown: 20,
@@ -124,42 +132,18 @@ class Player extends Phaser.Physics.Arcade.Sprite{
   {
     this.body.setVelocityY(-900);
   }
-    /*
-    if (!this.anims.isPlaying || this.anims.currentAnim.key !== 'PlayerAndando') {
-    this.play('PlayerAndando');
-    }  
-    */
   }
 
-  /*ataque(keys, mouse)
-  {
-    if(mouse.leftButtonDown() && this.PodeAtq <= 0)
-    {
-      this.PodeAtq = 5.2;
-    }
-    if(this.PodeAtq > 4 && this.PodeAtq < 5.2)
-    {
-      this.PodeAtq -= 0.1;
-      this.atq.setVisible(true);
-      this.atq.play('AnimacaoAtq',true);
-    }
-    else if(this.PodeAtq > 0)
-    {
-      this.PodeAtq -= 0.4;
-      this.atq.setVisible(false);
-    }}*/
-
-
-        ataque(mouse)
-    {
-
-    if(mouse.leftButtonDown() && this.AtaqueConfig.AtaqueWait == 0)
+  
+ataque(mouse)
+{
+    if(this.CliqueAtaque && this.AtaqueConfig.AtaqueWait == 0)
     {
       this.AtaqueConfig.AtaqueTime = this.AtaqueConfig.AtaqueDuration;
       this.AtaqueConfig.AtaqueWait = this.AtaqueConfig.AtaqueCooldown;
       this.atq.play('AnimacaoAtq', true);
-
     }
+    this.CliqueAtaque = false;
 
     if(this.AtaqueConfig.AtaqueTime > 0){
       this.atq.setVisible(true);
@@ -325,8 +309,9 @@ Parry(keys, boss, mouse) {
     }
 
     if (this.VidaAntiga > this.vida) {
-        this.DanoTomado = 60; // 200 frames de invencibilidade é bem longo (~3.3s a 60fps); considere reduzir
+        this.DanoTomado = 90; // 200 frames de invencibilidade é bem longo (~3.3s a 60fps); considere reduzir
     }
+
 }
 
   PosAtaque(){
@@ -361,16 +346,28 @@ Parry(keys, boss, mouse) {
 
       DanoDeContato(boss)
       {
-        if (this.scene.physics.overlap(this, boss) && this.PodeTomarDano == true )
+        if (this.scene.physics.overlap(this, boss) && this.PodeTomarDano == true && 
+        boss.investidaAtiva == false && this.DanoContatoFoi == false)
         {
+          this.DanoContatoFoi = true;
           this.vida -= 10;
+
+          
         if (this.x < boss.x) {
         this.body.setVelocityX(500);
         } else {
           this.body.setVelocityX(-500);
         }
         this.body.setVelocityY(-200);
+        
+        this.scene.time.delayedCall(400, () => {
+
+        this.DanoContatoFoi = false;
+      });
         }
+
+
+
       }
 
   update(keys,space,mouse,boss, delta)

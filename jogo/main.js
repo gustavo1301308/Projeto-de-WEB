@@ -6,7 +6,7 @@ const config ={
       default: 'arcade',
       arcade: {
         gravity: {y: 800},
-        debug: false
+        debug: true
       }
     },
   
@@ -173,9 +173,9 @@ function ScoreTempo(delta)
   
 function update(time, delta)
 {
-    player.update(keys, space, mouse, boss, delta);
     boss.update(player, delta);
-    
+    player.update(keys, space, mouse, boss, delta);
+
 
     ScoreTempo(delta);
 
