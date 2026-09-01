@@ -50,7 +50,6 @@ const config ={
     this.load.image('Lanca','assets/Lanca.png');
     this.load.image('Bola','assets/AtaqueBola.png');
 
-
     LoadAnima('assets/EfeitoParry.png', 'EfeitoParry',64,64,this);
     LoadAnima('assets/PlayerParry.png', 'PlayerParry', 400,400, this);
     LoadAnima('assets/PlayerIdle.png', 'PlayerIdle', 400, 400, this);
@@ -70,23 +69,23 @@ const config ={
       this.scale.height
   );
     TextoVida = this.add.text(150,30,'Vida: ',{fontSize: '64px',fill: '#ee0000'});
+    TextoVidaBoss = this.add.text(650,30,'Vida do Boss: ',{fontSize: '64px',fill: '#ee0000'});
+
     keys = this.input.keyboard.addKeys('W,A,D,F,E,F,SHIFT');
     space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     mouse = this.input.activePointer;
 
     CriaAnima(this,45,5,0,'EfeitoParry','EfeitoParry');
-    CriaAnima(this,16,3,0,'PlayerParry', 'PlayerParry');
+    CriaAnima(this,10,3,0,'PlayerParry', 'PlayerParry');
     CriaAnima(this, 8, 3, -1, 'PlayerIdle', 'PlayerIdle');
     CriaAnima(this, 5, 3, -1, 'BossAndando', 'BossAndando');
-    CriaAnima(this,12, 4, 0, 'AnimacaoAtq','AnimacaoAtq');
+    CriaAnima(this,37.5, 4, 0, 'AnimacaoAtq','AnimacaoAtq');
     CriaAnima(this,9, 7, 0, 'BossAtacando','BossAtacando');
     CriaAnima(this,8, 5, -1, 'PlayerAndando','PlayerAndando');
-    
     
     player = new Player(this, 400, 300, 'player', 'ataque');
     boss = new Boss(this, 900, 300, 'boss' , 'ataque');
     plataforms = this.physics.add.staticGroup();
-    
    
     const chao = plataforms.create(this.scale.width/2,this.scale.height,'chao');
     const esquerda = plataforms.create(0,this.scale.height/2,'chao');
@@ -94,15 +93,6 @@ const config ={
 
     this.physics.add.collider(player, plataforms);
     this.physics.add.collider(boss, plataforms);
-
-
-    this.physics.add.overlap(
-        player,
-        boss.hitbox,
-        () => {
-            boss.acertarPlayer(player);
-        }
-    );
 
     chao.setVisible(false);
     esquerda.setVisible(false);
@@ -129,6 +119,11 @@ const config ={
   }
 
   function CriaAnima(scene,frameRate, end, repeat, key, arquivo){
+      if(scene.anims.exists(key)) 
+        {
+          return
+        };
+
     scene.anims.create({
     key: key,
     frames: scene.anims.generateFrameNumbers(arquivo, {
@@ -142,10 +137,12 @@ const config ={
   
   function update(time, delta)
   {
-    TextoVida.setText('Vida: ' + player.vida);
-    player.update(keys, space, mouse , boss);
     boss.update(player);
-    
+    player.update(keys, space, mouse , boss);
+    TextoVida.setText('Vida: ' + player.vida);
+    TextoVidaBoss.setText('Vida do Boss: ' + boss.vida);
+
+
   } 
 
 /*
