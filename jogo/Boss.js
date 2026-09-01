@@ -4,6 +4,7 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
 
         super(scene, x, y, texture);
 
+        //oi
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
