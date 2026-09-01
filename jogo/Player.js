@@ -33,12 +33,13 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       this.jadeudano = false;
 
       this.AtaqueConfig = {
-      AtaqueCooldown: 32,
+      AtaqueCooldown: 20,
       AtaqueDuration: 8,
       AtaqueTime: 0,
       AtaqueWait: 0,
       AtaqueAtivo: false,
-      AtaqueDano: 30
+      AtaqueDano: 20,
+      AtaqueNumero: 0
 
       }
 
@@ -53,14 +54,15 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       }
 
       this.ParryConfig = {
-      ParryCooldown: 120,
+      ParryCooldown: 90,
       ParryDuration: 24,
       ParryTime: 0,
       ParryWait: 0,
       ParryAtivo: false,                        
       parryAgora: -1,
       ParryJaFoi: 0,
-      ParryFoi: false
+      ParryFoi: false,
+      ParryNumero: 0
       }
 
       this.body.setSize(110, 225);
@@ -155,12 +157,13 @@ class Player extends Phaser.Physics.Arcade.Sprite{
     {
       this.AtaqueConfig.AtaqueTime = this.AtaqueConfig.AtaqueDuration;
       this.AtaqueConfig.AtaqueWait = this.AtaqueConfig.AtaqueCooldown;
+      this.atq.play('AnimacaoAtq', true);
+
     }
 
     if(this.AtaqueConfig.AtaqueTime > 0){
       this.atq.setVisible(true);
       this.AtaqueConfig.AtaqueTime -= 1;
-      this.atq.play('AnimacaoAtq', true);
       this.AtaqueConfig.AtaqueAtivo = true;
     }
 
@@ -208,7 +211,6 @@ if(this.DashConfig.DashTime > 0){
 
 if(this.DashConfig.DashTime == 0 && this.DashConfig.DashAtivo)
   {
-  console.log('Zerou');
   this.setVelocityX(0);
   this.body.setAllowGravity(true);
   this.DashConfig.DashAtivo = false;
@@ -223,6 +225,9 @@ if(this.DashConfig.DashTime == 0){
     this.DashConfig.DashWait = 0;
   }
 }
+
+
+
 
 Parry(keys, boss, mouse) {
 
@@ -266,6 +271,7 @@ Parry(keys, boss, mouse) {
 
         this.ParryConfig.parryAgora = 0;
         this.DashConfig.DashWait = this.DashConfig.DashCooldown;
+        this.ParryConfig.ParryFoi = false;
         this.play('PlayerIdle');
 
         //this.ParryObj.setVisible(false);        
@@ -348,6 +354,7 @@ Parry(keys, boss, mouse) {
       {
       if (this.scene.physics.overlap(player.atq, boss) && (this.atq.visible) == true && this.jadeudano == false) {
           boss.vida -= this.AtaqueConfig.AtaqueDano;
+          this.AtaqueConfig.AtaqueNumero += 1;
           this.jadeudano = true;
       }
       }
@@ -366,7 +373,7 @@ Parry(keys, boss, mouse) {
         }
       }
 
-  update(keys,space,mouse,boss)
+  update(keys,space,mouse,boss, delta)
 
   {
 

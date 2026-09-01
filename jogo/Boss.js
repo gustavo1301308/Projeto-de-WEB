@@ -18,6 +18,11 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
         this.escolha;
         this.gambiarra = false;
 
+        this.barraDeVida = scene.add.graphics();
+        this.Barra = scene.add.sprite(300, 300, 'BarraVidaBoss');
+        this.Barra.setScale(1.2);
+
+
         this.atq = scene.physics.add.sprite(0, 0, ataque);
         this.atq.setScale(2.6);
         this.atq.setVisible(false);
@@ -57,6 +62,37 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
         this.setScale(1);
     }
 
+    AlinharAoChao() {
+    const chaoTopY = this.scene.chao.body.top; // sempre atualizado, mesmo se você mudar a hitbox do chão depois
+    const ajuste = chaoTopY - this.body.bottom; // diferença entre onde a base do boss está e onde deveria estar
+    this.y += ajuste; // corrige sem precisar de valor fixo
+     this.body.setVelocityY(0);
+}
+
+
+
+    AtualizarBarra()
+{
+    if (this.flipX) {
+        this.Barra.x = this.x + 40;
+    } else {
+        this.Barra.x = this.x - 40;
+    }
+
+    this.Barra.y = this.y - 80;
+
+    this.barraDeVida.clear();
+
+    this.barraDeVida.fillStyle(0x00ff00);
+
+    const largura = this.Barra.displayWidth - 22;
+    const altura = 20;
+
+    const larguraAtual = largura * (this.vida / 1000);
+
+    this.barraDeVida.fillRect(this.Barra.x - largura / 2, this.Barra.y - altura / 2, larguraAtual, altura);
+}
+
     Seguirplayer(player) {
 
             if (!this.anims.isPlaying || this.anims.currentAnim.key !== 'BossAndando') {
@@ -88,71 +124,27 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
     }
 
     PosAtaque(player) {
+    this.atq.y = this.y + 80;
 
-        this.atq.y = this.y + 80;
-
-        //this.atq.setAllowGravity(false);
-
+    if (this.PodeVirar) {
         if(player.x > this.x)
-
         {
-
             this.direcao = +1;
-
             this.atq.flipX = false;
-
             this.flipX = false;
-
-            if(this.gambiarra == false)
-            {
-                            this.body.setOffset(240, 275);
-            }
-
-        }else
-
+            if(this.gambiarra == false) {this.body.setOffset(240, 275)};
+        } else
         {
-
             this.direcao = -1;
-
             this.atq.flipX = true;
-
             this.flipX = true;
+            if(this.gambiarra == false) this.body.setOffset(335, 275);
+        }
+    }
 
-            if(this.gambiarra == false)
-                {
-                    this.body.setOffset(335, 275);
-                }
-
+    this.atq.x = this.x + 120 * this.direcao;
         }
 
-            if(player.x > this.x && this.PodeVirar == false)
-
-            {
-
-                this.flipX = false;
-
-                if(this.gambiarra == false)
-                    {
-                this.body.setOffset(85, 275);
-                    }
-            }
-
-            if(player.x < this.x && this.PodeVirar == false)
-
-            {
-
-                this.flipX = true;
-
-                if(this.gambiarra == false)
-                    {
-                this.body.setOffset(335, 275);
-                    }
-
-            }
-
-            this.atq.x = this.x + 120 * this.direcao;
-
-        }
 
     ataque1(player) {
 
@@ -207,6 +199,7 @@ acertarPlayer(player) {
         player.ParryObj.setVisible(true);
         player.ParryObj.play('EfeitoParry');
         player.ParryConfig.ParryFoi = true;
+        player.ParryConfig.ParryNumero += 1;
         player.ParryObj.once('animationcomplete-EfeitoParry', () => {
         player.ParryObj.setVisible(false);
         player.ParryConfig.ParryFoi = false;
@@ -282,6 +275,7 @@ investidaAtaque(player) {
         player.ParryObj.setVisible(true);
         player.ParryObj.play('EfeitoParry');
         player.ParryConfig.ParryFoi = true;
+        player.ParryConfig.ParryNumero += 1;
         player.ParryObj.once('animationcomplete-EfeitoParry', () => {
         player.ParryObj.setVisible(false);
         player.ParryConfig.ParryFoi = false;
@@ -303,134 +297,95 @@ investidaAtaque(player) {
     }
 
     criarFeixes() {
-
         const largura = this.scene.scale.width;
-
         const altura = this.scene.scale.height;
-
         //this.play
         for (let i = 0; i < 5; i++) {
-
             const feixe = this.scene.add.rectangle(
-
                 0,
-
                 0,
-
                 largura * 1.5,
-
                 9,
-
                 this.corFeixe
-
             );
-
             feixe.setOrigin(0.5);
-
             feixe.setVisible(false);
-
             this.feixes.push({
-
                 objeto: feixe,
-
                 angulo: 0,
-
                 x: 0,
-
                 y: 0
-
             });
-
         }
-
     }
 
     gerarPadraoXequeMate() {
-
         const largura = this.scene.scale.width;
-
         const altura = this.scene.scale.height;
-
         const angulos = [
-
             45,
-
             -45,
-
             25,
-
             -25,
-
             155
-
         ];
-
         for (let i = 0; i < this.feixes.length; i++) {
-
             const feixe = this.feixes[i];
-
             feixe.x = Phaser.Math.Between(0, largura);
-
             feixe.y = Phaser.Math.Between(100, altura - 120);
-
             feixe.angulo = angulos[i];
-
             feixe.objeto.x = feixe.x;
-
             feixe.objeto.y = feixe.y;
-
             feixe.objeto.setRotation(
-
                 Phaser.Math.DegToRad(feixe.angulo)
-
             );
-
             feixe.objeto.setFillStyle(this.corFeixe);
-
             feixe.objeto.setVisible(true);
-
         }
-
     }
 
     xequeMate(player) {
-
         if (!this.PodeAtq || this.EstaAtacando) {
-
             return;
-
         }
 
         this.PodeAtq = false;
-
         this.EstaAtacando = true;
-
         this.Vulneravel = false;
-
         this.PodeVirar = false;
-
         this.body.setVelocityX(0);
-
         this.gerarPadraoXequeMate();
-
         this.gambiarra = true;
 
         this.anims.play('AtaqueFeixes');
-        this.setScale(2);
+        this.body.setAllowGravity(false);
+        this.setScale(1.5);
         this.body.setSize(50, 170);
-        this.body.setOffset(350, 288);
+
+            if (this.flipX) {
+                this.body.setOffset(350, 288);   // pose olhando pra esquerda  
+                this.x -= 40;
+            } else {
+                this.body.setOffset(290 - this.body.width, 288); // espelhado, olhando pra direita
+                this.x += 40;
+
+            } 
+
+        //this.body.setOffset(350, 288);
+        this.body.updateFromGameObject();
+        this.AlinharAoChao();
         
-        console.log(
-            "offset:",
-            this.body.offset.x,
-            this.body.offset.y,
-            "size:",
-            this.body.width,
-            this.body.height
-        );
-        
+            for (let i = 0; i < this.feixes.length; i++) {
+            this.feixes[i].objeto.alpha = 0.5;
+            }
+
         this.scene.time.delayedCall(1000, () => {
+
             this.feixesAtivos = true;
+            for (let i = 0; i < this.feixes.length; i++) {
+            this.feixes[i].objeto.alpha = 0.8;
+            }
+
             this.scene.time.delayedCall(700, () => {
 
                 this.feixesAtivos = false;
@@ -441,98 +396,98 @@ investidaAtaque(player) {
                     this.feixes[i].objeto.setVisible(false);
 
                 }
+
+                if (this.flipX) {
+                this.body.setOffset(350, 288);   // pose olhando pra esquerda  
+                this.x += 40;
+            } else {
+                this.body.setOffset(290 - this.body.width, 288); // espelhado, olhando pra direita
+                this.x -= 40;
+
+            } 
                 this.EstaAtacando = false;
                 this.anims.play('BossAndando');
                 
                 this.gambiarra = false;
                 
-                this.setScale(1.3);
+                this.setScale(1);
                 this.body.setSize(70, 270, false);
                 this.body.setOffset(335, 275); 
-        
+
+                if(player.x > this.x)
+                {
+                    this.direcao = +1;
+                  
+                    this.atq.flipX = false;
+                    this.flipX = false;
+                    if(this.gambiarra == false) {this.body.setOffset(240, 275)};
+                } else
+                {
+                    this.direcao = -1;
+                    this.atq.flipX = true;
+                    this.flipX = true;
+                    if(this.gambiarra == false) this.body.setOffset(335, 275);
+                } 
+                this.body.updateFromGameObject();
+                this.AlinharAoChao();
                 this.Vulneravel = true;
-
+                this.body.setAllowGravity(true);
                 this.scene.time.delayedCall(1800, () => {
-
                     this.Vulneravel = false;
-
                     this.PodeAtq = true;
-
                     this.PodeVirar = true;
-
                 });
-
             });
-
         });
-
     }
 
     verificarFeixes(player) {
-
-        if (!this.feixesAtivos || this.jaDeuDanoFeixe) {
-
+        if (!this.feixesAtivos || this.jaDeuDanoFeixe == true) {
             return;
-
         }
-
-        if (player.ParryConfig.ParryAtivo) {
-
-        player.ParryConfig.ParryJaFoi = 1;
-
-        player.ParryObj.setVisible(true);
-
-        player.ParryObj.play('EfeitoParry');
-
-        player.ParryConfig.ParryFoi = true;
-
-        player.ParryObj.once('animationcomplete-EfeitoParry', () => {
-
-        player.ParryObj.setVisible(false);
-
-        player.ParryConfig.ParryFoi = false;
-
-        });return;}
-
+        
 //
-
         for (let i = 0; i < this.feixes.length; i++) {
-
             const feixe = this.feixes[i];
-
             const angulo = Phaser.Math.DegToRad(feixe.angulo);
 
-            const dx = player.x - feixe.x;
+            const dx = player.x + 20 - feixe.x;
+            const dy = player.body.top + 20 - feixe.y;
+            const distancia = Math.abs(dx * Math.sin(angulo) - dy * Math.cos(angulo));
 
-            const dy = player.y - feixe.y;
+            const dx2 = player.x - 20 - feixe.x;
+            const dy2 = player.body.bottom - 20 - feixe.y;
+            const distancia2 = Math.abs(dx2 * Math.sin(angulo) - dy2 * Math.cos(angulo));
 
-            const distancia = Math.abs(
-
-                dx * Math.sin(angulo) -
-
-                dy * Math.cos(angulo)
-
-            );
-
-            if (distancia < 25) {
-
+            if (distancia < 24 || distancia2 < 24) {
                 if (!player.PodeTomarDano) {
                 return;
                 }
-                player.vida -= 10;
 
-                if (player.body.velocity.y === 0) {
+                if (player.ParryConfig.ParryAtivo) {
+                player.ParryConfig.ParryJaFoi = 1;
+                player.ParryObj.setVisible(true);
+                player.ParryObj.play('EfeitoParry');
+                player.ParryConfig.ParryFoi = true;
+                this.jaDeuDanoFeixe = true;
+                player.ParryConfig.ParryNumero += 1;
+                player.ParryObj.once('animationcomplete-EfeitoParry', () => {
+                player.ParryObj.setVisible(false);
+                player.ParryConfig.ParryFoi = false;
+                });return;}
 
-                    player.body.setVelocityY(-300);
-
+                if(this.jaDeuDanoFeixe == false)
+                {
+                this.jaDeuDanoFeixe = true;
+                player.vida -= 10; 
                 }
 
+                if (player.body.velocity.y === 0) {
+                    player.body.setVelocityY(-300);
+                }
                 return;
-
             }
-
         }
-
     }
 
     AtaquePulo(player){
@@ -770,6 +725,7 @@ VerificarHitboxLancas(player) {
         player.ParryObj.setVisible(true);
         player.ParryObj.play('EfeitoParry');
         player.ParryConfig.ParryFoi = true;
+        player.ParryConfig.ParryNumero += 1;
         player.ParryObj.once('animationcomplete-EfeitoParry', () => {
         player.ParryObj.setVisible(false);
         player.ParryConfig.ParryFoi = false;
@@ -843,15 +799,31 @@ VerificarHitboxLancas(player) {
 
     escolherAtaque(player) {
 
+        this.scene.time.delayedCall(170, () => {
+
+            if(player.x > this.x)
+                {
+                    this.direcao = +1;
+                    this.atq.flipX = false;
+                    this.flipX = false;
+                    if(this.gambiarra == false) {this.body.setOffset(240, 275)};
+                } else
+                {
+                    this.direcao = -1;
+                    this.atq.flipX = true;
+                    this.flipX = true;
+                    if(this.gambiarra == false) this.body.setOffset(335, 275);
+                } 
+
         if (this.distanciaX < 300) {
 
             this.ataque1(player);
 
         } else if (this.distanciaX < 600) {
 
-            this.escolha = 1;
+            //this.escolha = 1;
 
-            //this.escolha = Phaser.Math.Between(0, 3);
+            this.escolha = Phaser.Math.Between(0, 3);
 
             if (this.escolha === 0) {
 
@@ -876,7 +848,7 @@ VerificarHitboxLancas(player) {
             this.investidaAtaque(player);
 
         }
-
+    });
     }
 
  morrer(){
@@ -886,10 +858,14 @@ VerificarHitboxLancas(player) {
       }
   }
 
-    update(player) {
+  
+
+    update(player, delta) {
+        //console.log('Foi2');
         this.morrer();
         this.PosAtaque(player);
         this.verificarFeixes(player);
+        this.AtualizarBarra();
         this.distanciaX = Math.abs(this.x - player.x);
         this.distanciaY = Math.abs(this.y - player.y);
         if (this.Vulneravel) {
