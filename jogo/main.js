@@ -57,6 +57,8 @@ const config ={
     LoadAnima('assets/AnimacaoAtq.png', 'AnimacaoAtq', 1024, 784, this);
     LoadAnima('assets/BossAtacando.png', 'BossAtacando', 640, 640, this);
     LoadAnima('assets/PlayerAndando.png', 'PlayerAndando', 400, 400, this);
+    LoadAnima('assets/AtaqueFeixes.png', 'AtaqueFeixes', 400, 400, this);
+
 
   }
   
@@ -82,6 +84,7 @@ const config ={
     CriaAnima(this,37.5, 4, 0, 'AnimacaoAtq','AnimacaoAtq');
     CriaAnima(this,9, 7, 0, 'BossAtacando','BossAtacando');
     CriaAnima(this,8, 5, -1, 'PlayerAndando','PlayerAndando');
+    CriaAnima(this,7, 13, 0, 'AtaqueFeixes','AtaqueFeixes');
     
     player = new Player(this, 400, 300, 'player', 'ataque');
     boss = new Boss(this, 900, 300, 'boss' , 'ataque');

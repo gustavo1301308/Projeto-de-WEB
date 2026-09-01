@@ -402,6 +402,7 @@ investidaAtaque(player) {
 
         this.scene.time.delayedCall(1000, () => {
 
+            this.anims.play('AtaqueFeixes');
             this.feixesAtivos = true;
 
             this.scene.time.delayedCall(700, () => {
