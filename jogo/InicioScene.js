@@ -20,6 +20,25 @@ class InicioScene extends Phaser.Scene {
     ).setOrigin(0.5);
 
 
+       
+       this.add.text(
+        centroX,
+        centroY + 200,
+        "Controls:
+    A e D - andar
+    Espaço - pular
+    Botão esquerdo do mouse - Ataque corpo a corpo
+    Shift - Dash
+    F - Parry
+    Q - Atirar
+        ",
+        {
+            fontSize: "32px",
+            color: "#ffffff"
+        }
+    ).setOrigin(0.5);
+
+
     let botao = this.add.text(
         centroX,
         centroY + 50,
