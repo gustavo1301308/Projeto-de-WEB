@@ -29,13 +29,12 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       this.ParryObj.alpha = 0.75;
       this.PodeDefesa = 0;
       this.vida = 100;
-      this.DanoTomado = false;
+      this.DanoTomado = 0; // agora em ms (era contagem de frames)
+      this.BlinkAcumulado = 0; // acumulador (ms) para o piscar de invencibilidade
       this.PodeTomarDano = true;
       this.Direcao = 1;
       this.VidaAntiga = 0;
       this.jadeudano = false;
-      this.ProjetilCooldown = 0;
-      this.ProjetilNumero = 0;
 
       this.CliqueAtaque = false; // flag setada pelo evento, consumida no update
 
@@ -44,9 +43,18 @@ class Player extends Phaser.Physics.Arcade.Sprite{
           this.CliqueAtaque = true; // marca que houve um clique novo
       }});
 
+      this.ProjetilConfig = {
+      ProjetilCooldown: 667, // ms (equivalente a 40 frames a 60fps)
+      ProjetilNumero: 0,
+      Projeteis: [],
+      ProjetilDano: 20,
+      Municao: 7
+
+      }
+
       this.AtaqueConfig = {
-      AtaqueCooldown: 5,
-      AtaqueDuration: 8,
+      AtaqueCooldown: 267, // ms (equivalente a 16 frames a 60fps)
+      AtaqueDuration: 133, // ms (equivalente a 8 frames a 60fps)
       AtaqueTime: 0,
       AtaqueWait: 0,
       AtaqueAtivo: false,
@@ -56,8 +64,8 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       }
 
       this.DashConfig = {
-      DashCooldown: 90,
-      DashDuration: 16,
+      DashCooldown: 1500, // ms (equivalente a 90 frames a 60fps)
+      DashDuration: 267, // ms (equivalente a 16 frames a 60fps)
       DashTime: 0,
       DashWait: 0,
       DashSpeed: 1300,
@@ -66,8 +74,8 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       }
 
       this.ParryConfig = {
-      ParryCooldown: 90,
-      ParryDuration: 24,
+      ParryCooldown: 1500, // ms (equivalente a 90 frames a 60fps)
+      ParryDuration: 400, // ms (equivalente a 24 frames a 60fps)
       ParryTime: 0,
       ParryWait: 0,
       ParryAtivo: false,                        
@@ -83,7 +91,10 @@ class Player extends Phaser.Physics.Arcade.Sprite{
 
   }  
 
-  movimento(keys, space) {
+  movimento(keys, space, delta) {
+    const acelX = 6000; // px/s² (equivalente a +100/frame a 60fps)
+    const desacelX = 3600; // px/s² (equivalente a -60/frame a 60fps)
+
     if (!this.ParryConfig.ParryAtivo) {
         if (keys.A.isDown || keys.D.isDown) {
             if (!this.anims.isPlaying ||
@@ -99,14 +110,14 @@ class Player extends Phaser.Physics.Arcade.Sprite{
     }
   if(keys.A.isDown && this.body.velocity.x > -480)
   {
-    this.body.setVelocityX(this.body.velocity.x - 100);
+    this.body.setVelocityX(this.body.velocity.x - acelX * (delta / 1000));
     this.flipX = true;
     this.atq.flipX = true;  
     this.Direcao = -1;
   }
   else if(keys.D.isDown && this.body.velocity.x < 480)
   {
-    this.body.setVelocityX(this.body.velocity.x + 100);
+    this.body.setVelocityX(this.body.velocity.x + acelX * (delta / 1000));
     this.flipX = false;
     this.atq.flipX = false;  
         this.Direcao = 1;
@@ -115,11 +126,11 @@ class Player extends Phaser.Physics.Arcade.Sprite{
     {
       if(this.body.velocity.x > 99)
       {
-        this.body.setVelocityX(this.body.velocity.x - 60);
+        this.body.setVelocityX(this.body.velocity.x - desacelX * (delta / 1000));
       }
       if(this.body.velocity.x < -99)  
       {
-        this.body.setVelocityX(this.body.velocity.x + 60);
+        this.body.setVelocityX(this.body.velocity.x + desacelX * (delta / 1000));
       }
       if(this.body.velocity.x > -120 && this.body.velocity.x < 120)
       {
@@ -138,62 +149,94 @@ class Player extends Phaser.Physics.Arcade.Sprite{
   }
   }
 
+      CriarMunição()
+{
+    const projetil = this.scene.physics.add.sprite(
+        this.x + (60 * this.Direcao),
+        this.y,
+        'Bola'
+    );
+    this.ProjetilConfig.Municao -= 1;
+    this.ProjetilConfig.ProjetilCooldown = 667; // ms (equivalente a 40 frames a 60fps) — reseta o cooldown
+    projetil.setScale(0.2);
+    projetil.body.setAllowGravity(false);
+    projetil.setVelocityX(800 * this.Direcao);
+    projetil.setFlipX(this.Direcao == -1);
+    projetil.jaAtingiu = false; // controla se já bateu em algo e parou de dar dano
+    projetil.podeSerRecolhido = false; // só pode ser pego pelo player depois de já ter parado
 
+    this.ProjetilConfig.Projeteis.push(projetil);
+}
 
-ataqueprojetil(keys, boss) {
+ataqueprojetil(keys, boss, delta) {
 
-    if (this.ProjetilCooldown > 0) {
-        this.ProjetilCooldown--;
+    // Percorre de trás para frente para poder remover elementos
+    for (let i = this.ProjetilConfig.Projeteis.length - 1; i >= 0; i--) {
+
+        const projetil = this.ProjetilConfig.Projeteis[i];
+
+        // Remove referências a projéteis que já foram destruídos
+        if (!projetil || !projetil.active) {
+            this.ProjetilConfig.Projeteis.splice(i, 1);
+            continue;
+        }
+
+        // Se o player encostar num projétil que já parou (no chão ou no boss), recolhe e devolve munição
+        if (projetil.podeSerRecolhido && this.scene.physics.overlap(this, projetil)) {
+            this.ProjetilConfig.Municao += 1;
+            projetil.destroy();
+            this.ProjetilConfig.Projeteis.splice(i, 1);
+            continue;
+        }
+
+        // Já bateu em algo antes: não dá mais dano, só espera ser recolhido
+        if (projetil.jaAtingiu) {
+            continue;
+        }
+
+        // Acertou o Boss
+        if (this.scene.physics.overlap(projetil, boss)) {
+
+            boss.vida -= this.ProjetilConfig.ProjetilDano;
+
+            this.jadeudano = true;
+
+            projetil.jaAtingiu = true;
+            projetil.podeSerRecolhido = true;
+            projetil.setVelocityX(0);
+            projetil.body.setAllowGravity(true);
+
+            continue;
+        }
+
+        // Acertou uma plataforma (parede ou chão)
+        if (this.scene.physics.overlap(projetil, this.plataforms)) {
+
+            this.jadeudano = true;
+
+            projetil.jaAtingiu = true;
+            projetil.podeSerRecolhido = true;
+            projetil.setVelocityX(0);
+            projetil.body.setAllowGravity(true);
+        }
+    }
+    
+    if (this.ProjetilConfig.ProjetilCooldown > 0) {
+        this.ProjetilConfig.ProjetilCooldown -= delta;
+        if (this.ProjetilConfig.ProjetilCooldown < 0) this.ProjetilConfig.ProjetilCooldown = 0;
     }
 
-    if (keys.Q.isDown && this.ProjetilCooldown <= 0 && this.ProjetilNumero < 10) {
-
-        let projetil = this.scene.physics.add.sprite(
-            this.x + (60 * this.Direcao),
-            this.y,
-            'Bola',
-        )
-
-        projetil.setScale(0.2)
-        projetil.body.setAllowGravity(false);
-        projetil.setVelocityX(800 * this.Direcao);
-        projetil.setFlipX(this.Direcao == -1);
-        projetil.setCollideWorldBounds(false);
-        this.ProjetilCooldown = 120;
-        this.ProjetilNumero++;
-        projetil.dano = 20;
-
-        this.scene.physics.add.overlap(projetil, boss, () => {
-            boss.vida -= projetil.dano;
-            projetil.destroy();
-        });
-
-        this.scene.physics.add.overlap(projetil, this.plataforms, () => {
-
-            projetil.destroy();
-        });
-
-
-
-
-        /*this.scene.physics.world.on('worldstep', () => {
-
-            if (
-                projetil.active &&
-                (
-                    projetil.x < 0 ||
-                    projetil.x > this.scene.physics.world.bounds.width
-                )
-            ) {
-                projetil.destroy();
-            }
-
-        });*/
+    if (
+        keys.Q.isDown &&
+        this.ProjetilConfig.ProjetilCooldown <= 0 &&
+        this.ProjetilConfig.Municao > 0
+    ) {
+        this.CriarMunição();
     }
 }
-ataque(mouse)
+ataque(mouse, delta)
 {
-    if(this.CliqueAtaque && this.AtaqueConfig.AtaqueWait == 0)
+    if(this.CliqueAtaque && this.AtaqueConfig.AtaqueWait <= 0)
     {
       this.AtaqueConfig.AtaqueTime = this.AtaqueConfig.AtaqueDuration;
       this.AtaqueConfig.AtaqueWait = this.AtaqueConfig.AtaqueCooldown;
@@ -203,19 +246,20 @@ ataque(mouse)
 
     if(this.AtaqueConfig.AtaqueTime > 0){
       this.atq.setVisible(true);
-      this.AtaqueConfig.AtaqueTime -= 1;
+      this.AtaqueConfig.AtaqueTime -= delta;
       this.AtaqueConfig.AtaqueAtivo = true;
     }
 
-    if(this.AtaqueConfig.AtaqueTime == 0 && this.AtaqueConfig.AtaqueAtivo)
+    if(this.AtaqueConfig.AtaqueTime <= 0 && this.AtaqueConfig.AtaqueAtivo)
       {
+      this.AtaqueConfig.AtaqueTime = 0;
       this.atq.setVisible(false);
       this.jadeudano = false;
       this.AtaqueConfig.AtaqueAtivo = false;
     }
 
-    if(this.AtaqueConfig.AtaqueTime == 0){
-    this.AtaqueConfig.AtaqueWait -=1;
+    if(this.AtaqueConfig.AtaqueTime <= 0){
+    this.AtaqueConfig.AtaqueWait -= delta;
 }
 
   if(this.AtaqueConfig.AtaqueWait <= 0)
@@ -231,9 +275,9 @@ ataque(mouse)
 
 
 
-    Dash(keys)
+    Dash(keys, delta)
 {
-if(keys.SHIFT.isDown && this.DashConfig.DashWait == 0)
+if(keys.SHIFT.isDown && this.DashConfig.DashWait <= 0)
 {
   this.body.setAllowGravity(false);
   this.DashConfig.DashTime = this.DashConfig.DashDuration;
@@ -244,20 +288,21 @@ if(keys.SHIFT.isDown && this.DashConfig.DashWait == 0)
 if(this.DashConfig.DashTime > 0){
   this.setVelocityX(this.DashConfig.DashSpeed * this.Direcao);
   this.setVelocityY(0);
-  this.DashConfig.DashTime -= 1;
+  this.DashConfig.DashTime -= delta;
   this.DashConfig.DashAtivo = true;
   this.y = this.DashConfig.Savey;
 }
 
-if(this.DashConfig.DashTime == 0 && this.DashConfig.DashAtivo)
+if(this.DashConfig.DashTime <= 0 && this.DashConfig.DashAtivo)
   {
+  this.DashConfig.DashTime = 0;
   this.setVelocityX(0);
   this.body.setAllowGravity(true);
   this.DashConfig.DashAtivo = false;
 }
 
-if(this.DashConfig.DashTime == 0){
-    this.DashConfig.DashWait -=1;
+if(this.DashConfig.DashTime <= 0){
+    this.DashConfig.DashWait -= delta;
 }
 
   if(this.DashConfig.DashWait <= 0)
@@ -269,40 +314,26 @@ if(this.DashConfig.DashTime == 0){
 
 
 
-Parry(keys, boss, mouse) {
-
+Parry(keys, boss, mouse, delta) {
     if (this.ParryConfig.parryAgora == 0) {
-
         this.ParryConfig.parryAgora = -1;
-
     }
-
-    if ((keys.F.isDown || mouse.rightButtonDown()) && this.ParryConfig.ParryWait == 0) {
-
+    if ((keys.F.isDown || mouse.rightButtonDown()) && this.ParryConfig.ParryWait <= 0) {
         this.play('PlayerParry');
-
-
         this.ParryConfig.ParryTime = this.ParryConfig.ParryDuration;
-
         this.ParryConfig.ParryWait = this.ParryConfig.ParryCooldown;
-
         this.ParryConfig.ParryJaFoi = 0;
-
         this.ParryConfig.parryAgora = 1;
-
     }
-
     if (this.ParryConfig.ParryTime > 0) {
-
         this.ParryConfig.ParryAtivo = true;
-
-        this.ParryConfig.ParryTime -= 1;
-
+        this.ParryConfig.ParryTime -= delta;
     }
 
 
-    if (this.ParryConfig.ParryTime == 0 && this.ParryConfig.ParryAtivo == true) {
+    if (this.ParryConfig.ParryTime <= 0 && this.ParryConfig.ParryAtivo == true) {
 
+        this.ParryConfig.ParryTime = 0;
         this.ParryConfig.ParryAtivo = false;
 
         this.ParryConfig.parryAgora = 0;
@@ -337,30 +368,35 @@ Parry(keys, boss, mouse) {
 
     if (this.ParryConfig.ParryWait > 0) {
 
-        this.ParryConfig.ParryWait -= 1;
+        this.ParryConfig.ParryWait -= delta;
+        if (this.ParryConfig.ParryWait < 0) this.ParryConfig.ParryWait = 0;
 
     }
 
 }
 
-    TomouDano(boss) {
-    if (this.DanoTomado == 0) {
+    TomouDano(boss, delta) {
+    if (this.DanoTomado <= 0) {
         this.PodeTomarDano = true;
     }
     if (this.DanoTomado > 0) {
-        this.DanoTomado -= 1;
+        this.DanoTomado -= delta;
         this.PodeTomarDano = false;
 
-        // só troca o alpha a cada 6 frames (~10x por segundo)
-        if (this.DanoTomado % 6 == 0) {
+        // troca o alpha a cada 100ms (~10x por segundo — equivalente aos 6 frames a 60fps originais)
+        this.BlinkAcumulado += delta;
+        if (this.BlinkAcumulado >= 100) {
+            this.BlinkAcumulado -= 100;
             this.alpha = (this.alpha === 1) ? 0.3 : 1;
         }
     } else {
+        this.DanoTomado = 0;
+        this.BlinkAcumulado = 0;
         this.alpha = 1; // garante que volta ao normal fora da invencibilidade
     }
 
     if (this.VidaAntiga > this.vida) {
-        this.DanoTomado = 90; // 200 frames de invencibilidade é bem longo (~3.3s a 60fps); considere reduzir
+        this.DanoTomado = 1500; // ms (equivalente a 90 frames a 60fps)
     }
 
 }
@@ -425,15 +461,15 @@ Parry(keys, boss, mouse) {
 
   {
     console.log("ffff");
-  this.ataqueprojetil(keys, boss)
-  this.movimento(keys, space);
-  this.ataque(mouse);
-  this.Dash(keys);
-  this.Parry(keys, boss, mouse);
+  this.ataqueprojetil(keys, boss, delta)
+  this.movimento(keys, space, delta);
+  this.ataque(mouse, delta);
+  this.Dash(keys, delta);
+  this.Parry(keys, boss, mouse, delta);
   this.PosAtaque();
   this.DanoDeContato(boss);
   this.DarDano(boss);
-  this.TomouDano(boss);
+  this.TomouDano(boss, delta);
   this.morrer();
 
   this.VidaAntiga = this.vida;

@@ -39,9 +39,9 @@ const config ={
   let atq;
   let boss;
   let TextoVida;
-  let TextoScore;
+  let Textoscore;
   let TextoTempo;
-  let Score = 0;
+  let score = 0;
   let tempoFrames = 1;
   let tempo = 1;
   let NAtaque = 1;
@@ -62,12 +62,12 @@ const config ={
     LoadAnima('assets/EfeitoParry.png', 'EfeitoParry',64,64,this);
     LoadAnima('assets/PlayerParry.png', 'PlayerParry', 400,400, this);
     LoadAnima('assets/PlayerIdle.png', 'PlayerIdle', 400, 400, this);
-    LoadAnima('assets/BossAndando.png', 'BossAndando', 640, 640, this);
+    LoadAnima('assets/BossAndando.png', 'BossAndando', 400, 400, this);
     LoadAnima('assets/AnimacaoAtq.png', 'AnimacaoAtq', 1024, 784, this);
-    LoadAnima('assets/BossAtacando.png', 'BossAtacando', 640, 640, this);
+    LoadAnima('assets/BossAtacando.png', 'BossAtacando', 400, 400, this);
     LoadAnima('assets/PlayerAndando.png', 'PlayerAndando', 400, 400, this);
     LoadAnima('assets/AtaqueFeixes.png', 'AtaqueFeixes', 640, 640, this);
-    LoadAnima('assets/BossIdle.png', 'BossIdle', 640, 640, this);
+    LoadAnima('assets/BossIdle.png', 'BossIdle', 400, 400, this);
 
 
   }
@@ -81,7 +81,7 @@ const config ={
       this.scale.height
   );
     TextoVida = this.add.text(150,30,'Vida: ',{fontSize: '64px',fill: '#ee0000'});
-    TextoScore = this.add.text(550,30,'Score: ',{fontSize: '64px',fill: '#ee0000'});
+    Textoscore = this.add.text(550,30,'score: ',{fontSize: '64px',fill: '#ee0000'});
     TextoTempo = this.add.text(950,30,'Tempo: ',{fontSize: '64px',fill: '#ee0000'});
 
     keys = this.input.keyboard.addKeys('W,A,D,F,E,Q,SHIFT');
@@ -93,10 +93,10 @@ const config ={
     CriaAnima(this, 8, 3, -1, 'PlayerIdle', 'PlayerIdle');
     CriaAnima(this, 5, 3, -1, 'BossAndando', 'BossAndando');
     CriaAnima(this,15, 4, 0, 'AnimacaoAtq','AnimacaoAtq');
-    CriaAnima(this,12, 11, 0, 'BossAtacando','BossAtacando');
+    CriaAnima(this,12, 9, 0, 'BossAtacando','BossAtacando');
     CriaAnima(this,8, 5, -1, 'PlayerAndando','PlayerAndando');
-    CriaAnima(this,7, 13, 0, 'AtaqueFeixes','AtaqueFeixes');
-    CriaAnima(this,6, 3, -1, 'BossIdle','BossIdle');
+    CriaAnima(this,7, 9, 0, 'AtaqueFeixes','AtaqueFeixes');
+    CriaAnima(this,6, 3, 3, 'BossIdle','BossIdle');
     
     plataforms = this.physics.add.staticGroup();
 
@@ -104,11 +104,7 @@ const config ={
     const esquerda = plataforms.create(0,this.scale.height/2,'chao');
     const direita = plataforms.create(this.scale.width /*- 200*/,this.scale.height/2,'chao');
 
-    player = new Player(this, 400, 300, 'player', 'ataque', plataforms);
-    boss = new Boss(this, 900, 100, 'boss' , 'ataque', plataforms);
-  
-    this.physics.add.collider(player, plataforms);
-    this.physics.add.collider(boss, plataforms);
+
 
     chao.setVisible(false);
     esquerda.setVisible(false);
@@ -123,7 +119,11 @@ const config ={
     direita.refreshBody();
     this.chao = chao;
 
-
+    player = new Player(this, 400, 300, 'player', 'ataque', plataforms);
+    boss = new Boss(this, 900, 100, 'boss' , 'ataque', plataforms);
+  
+    this.physics.add.collider(player, plataforms);
+    this.physics.add.collider(boss, plataforms);
 
   }
 
@@ -152,7 +152,7 @@ const config ={
 });
   }
 
-function ScoreTempo(delta)
+function scoreTempo(delta)
 {
     tempo += delta / 1000;
 
@@ -180,10 +180,10 @@ function update(time, delta)
     player.update(keys, space, mouse, boss, delta);
 
 
-    ScoreTempo(delta);
+    scoreTempo(delta);
 
     TextoVida.setText('Vida: ' + player.vida);
-    TextoScore.setText('Score: ' + score.toFixed(0));
+    Textoscore.setText('score: ' + score.toFixed(0));
     TextoTempo.setText('Tempo: ' + tempo.toFixed(0));
 }
 
