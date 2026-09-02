@@ -41,6 +41,7 @@ const config ={
   let TextoVida;
   let Textoscore;
   let TextoTempo;
+  let TextoMunicao;
   let score = 0;
   let tempoFrames = 1;
   let tempo = 1;
@@ -81,8 +82,9 @@ const config ={
       this.scale.height
   );
     TextoVida = this.add.text(150,30,'Vida: ',{fontSize: '64px',fill: '#ee0000'});
-    Textoscore = this.add.text(550,30,'score: ',{fontSize: '64px',fill: '#ee0000'});
-    TextoTempo = this.add.text(950,30,'Tempo: ',{fontSize: '64px',fill: '#ee0000'});
+    Textoscore = this.add.text(150,90,'score: ',{fontSize: '64px',fill: '#ee0000'});
+    TextoTempo = this.add.text(150,150,'Tempo: ',{fontSize: '64px',fill: '#ee0000'});
+    TextoMunicao = this.add.text(150,2100,'Municao: ',{fontSize: '64px',fill: '#ee0000'});
 
     keys = this.input.keyboard.addKeys('W,A,D,F,E,Q,SHIFT');
     space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
