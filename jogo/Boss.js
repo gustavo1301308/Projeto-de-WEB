@@ -1,6 +1,6 @@
 class Boss extends Phaser.Physics.Arcade.Sprite {
 
-    constructor(scene, x, y, texture, ataque) {
+    constructor(scene, x, y, texture, ataque, plataforms) {
 
         super(scene, x, y, texture);
 
@@ -17,6 +17,7 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
         this.escolha;
         this.gambiarra = false;
         this.escolha2 = 0;
+        this.plataforms = plataforms;
 
         this.barraDeVida = scene.add.graphics();
         this.Barra = scene.add.sprite(300, 300, 'BarraVidaBoss');
@@ -62,11 +63,17 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
         this.setScale(1);
     }
 
-    AlinharAoChao() {
-    const chaoTopY = this.scene.chao.body.top; // sempre atualizado, mesmo se você mudar a hitbox do chão depois
-    const ajuste = chaoTopY - this.body.bottom; // diferença entre onde a base do boss está e onde deveria estar
-    this.y += ajuste; // corrige sem precisar de valor fixo
-     this.body.setVelocityY(0);
+AlinharAoChao() {
+    const chaoTopY = this.scene.chao.body.top;
+
+    this.body.updateFromGameObject();
+
+    const ajuste = chaoTopY - this.body.bottom;
+
+    this.y += ajuste;
+
+    this.body.updateFromGameObject();
+    this.body.setVelocityY(0);
 }
 
 
@@ -98,8 +105,8 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
             if (!this.anims.isPlaying || this.anims.currentAnim.key !== 'BossAndando') {
 
                 this.play('BossAndando');
-
                 this.body.setSize(70, 270);
+                this.setScale(1);
 
             }
 
@@ -123,10 +130,24 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
 
     }
 
+    DefinirIdle(player)
+    {
+        this.play('BossIdle');
+        this.setScale(1.6);
+        this.body.setSize(50,170,false);
+        if (this.flipX) {
+        this.body.setOffset(355, 290);
+        } else {
+        this.body.setOffset(240, 290);
+        }
+        
+    }
+
     PosAtaque(player) {
     this.atq.y = this.y + 80;
 
-    if (this.PodeVirar) {
+    if (this.PodeVirar && (this.anims.currentAnim?.key === 'BossAndando' || this.anims.currentAnim?.key === 'BossAtacando' ||
+        this.anims.currentAnim?.key === 'BossIdle')) {
         if(player.x > this.x)
         {
             this.direcao = +1;
@@ -154,7 +175,6 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
             this.EstaAtacando = true;
             this.jaDeuDano = false;
             this.body.setVelocityX(0);
-            this.PosAtaque(player);
 
                 const ativarHitbox = (animacao, frame) => {
                     if (frame.index === 7) {
@@ -164,24 +184,33 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
                 };
 
                 this.on('animationupdate', ativarHitbox);
+
+                
                 this.play('BossAtacando');
+                this.setScale(1);
                 this.body.setSize(100, 270);
-                this.body.setOffset(335, 275);
+                this.AlinharAoChao();
+                this.PosAtaque(player);
+
+                /*
+                if (this.flipX) {
+                this.body.setOffset(350, 288);   // pose olhando pra esquerda  
+            } else {
+                this.body.setOffset(590, 288); // espelhado, olhando pra direita
+            } 
+                */
+                //this.body.setOffset(335, 275);
+
                 this.once('animationcomplete-BossAtacando', () => {
                 this.atq.setVisible(false);
                 this.EstaAtacando = false;
-                this.play('BossAndando');
+                this.DefinirIdle(player);
 
             });
-
             this.scene.time.delayedCall(2000, () => {
-
                 this.PodeAtq = true;
-
             });
-
         }
-
     }
 
 acertarPlayer(player) {
@@ -413,13 +442,15 @@ investidaAtaque(player) {
 
             } 
                 this.EstaAtacando = false;
-                this.anims.play('BossAndando');
+                this.DefinirIdle(player);
+
+                //this.anims.play('BossIdle');
                 
                 this.gambiarra = false;
                 
-                this.setScale(1);
-                this.body.setSize(70, 270, false);
-                this.body.setOffset(335, 275); 
+                //this.setScale(1);
+                //this.body.setSize(70, 270, false);
+                //body.setOffset(335, 275); 
 
                 if(player.x > this.x)
                 {
@@ -513,6 +544,36 @@ investidaAtaque(player) {
 
         this.AtingiuAlturaMax = 0;
 
+        /*
+        this.play('BossIdle');
+        this.setScale(1.6);
+        this.body.setSize(50,170,false);
+        if (this.flipX) {
+        this.body.setOffset(355, 290);
+        } else {
+        this.body.setOffset(240, 290);
+        }*/ 
+       this.DefinirIdle(player,);
+        
+       /*
+               //ajustar tamanho
+            if (this.flipX) {
+                this.body.setOffset(350, 288);   // pose olhando pra esquerda  
+            } else {
+                this.body.setOffset(290 - this.body.width, 288); // espelhado, olhando pra direita
+
+            } 
+                this.EstaAtacando = false;
+                this.anims.play('BossIdle');
+                
+                this.gambiarra = false;
+                
+                this.setScale(1);
+                this.body.setSize(70, 270, false);
+                //this.body.setOffset(335, 275); 
+            */
+                //ajustar tamanho
+        
         this.PodeVirar = false;
 
             this.body.setVelocityY(-800);
@@ -777,6 +838,7 @@ VerificarHitboxLancas(player) {
         this.scene.time.delayedCall(200, () => {
 
             this.LancarLancas();
+            //this.setScale(1);
 
     this.scene.time.delayedCall(600, () => {
 
@@ -793,21 +855,22 @@ VerificarHitboxLancas(player) {
         this.PodeAtq = true;
 
     });
-
     });
-
     });
-
     });
-
     });
 
     }
 
    escolherAtaque(player) {
+
     if (!this.PodeAtq || this.EstaAtacando) return;
     this.PodeAtq = false;
+    this.PosAtaque(player);
     this.scene.time.delayedCall(170, () => {
+
+        this.Seguirplayer(player);
+
         if(player.x > this.x)
         {
             this.direcao = +1;
@@ -824,7 +887,10 @@ VerificarHitboxLancas(player) {
 
         // removido o "if (this.distanciaX < 300) { this.ataque1(player); }"
         // agora escolherAtaque só é chamado quando já está fora de alcance de ataque1 (distanciaX > 200)
-        this.escolha = Phaser.Math.Between(0, 3);
+        //this.escolha = 2;
+
+
+        this.escolha = Phaser.Math.Between(0, 2);
 
         if (this.escolha === 0) {
             this.investidaAtaque(player);
@@ -889,7 +955,7 @@ VerificarHitboxLancas(player) {
             return;
         }
 
-        if (this.distanciaX > 300) {
+        if (this.distanciaX > 400) {
             if (this.PodeAtq) {
                 this.escolherAtaque(player);
             } else {
@@ -897,7 +963,7 @@ VerificarHitboxLancas(player) {
             }
         } else {
 
-            this.escolha2 = Phaser.Math.Between(0, 3);
+            this.escolha2 = Phaser.Math.Between(1, 3);
 
             if(this.escolha2 == 0)
             {

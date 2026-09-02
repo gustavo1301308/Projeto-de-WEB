@@ -1,6 +1,6 @@
 class Player extends Phaser.Physics.Arcade.Sprite{
 
-    constructor(scene, x, y, texture, ataque){
+    constructor(scene, x, y, texture, ataque, plataforms){
 
         super(scene, x , y , texture);
 
@@ -17,6 +17,8 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       this.atq.setAngle(195);
       this.atq.setSize(400,250);
       this.DanoContatoFoi = false;
+
+      this.plataforms = plataforms;
 
       this.ParryObj = scene.add.sprite(400,300,'EfeitoParry');
       this.ParryObj.setScale(6.5);
@@ -136,6 +138,8 @@ class Player extends Phaser.Physics.Arcade.Sprite{
   }
   }
 
+
+
 ataqueprojetil(keys, boss) {
 
     if (this.ProjetilCooldown > 0) {
@@ -148,33 +152,31 @@ ataqueprojetil(keys, boss) {
             this.x + (60 * this.Direcao),
             this.y,
             'Bola',
-      
-        );
-              projetil.setScale(0.2)
+        )
 
+        projetil.setScale(0.2)
         projetil.body.setAllowGravity(false);
-
         projetil.setVelocityX(800 * this.Direcao);
-
         projetil.setFlipX(this.Direcao == -1);
-
         projetil.setCollideWorldBounds(false);
-
         this.ProjetilCooldown = 120;
-
         this.ProjetilNumero++;
-
         projetil.dano = 20;
 
         this.scene.physics.add.overlap(projetil, boss, () => {
-
             boss.vida -= projetil.dano;
-
             projetil.destroy();
-
         });
 
-        this.scene.physics.world.on('worldstep', () => {
+        this.scene.physics.add.overlap(projetil, this.plataforms, () => {
+
+            projetil.destroy();
+        });
+
+
+
+
+        /*this.scene.physics.world.on('worldstep', () => {
 
             if (
                 projetil.active &&
@@ -186,7 +188,7 @@ ataqueprojetil(keys, boss) {
                 projetil.destroy();
             }
 
-        });
+        });*/
     }
 }
 ataque(mouse)
@@ -422,6 +424,7 @@ Parry(keys, boss, mouse) {
   update(keys,space,mouse,boss, delta)
 
   {
+    console.log("ffff");
   this.ataqueprojetil(keys, boss)
   this.movimento(keys, space);
   this.ataque(mouse);

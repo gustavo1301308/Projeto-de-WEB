@@ -67,6 +67,7 @@ const config ={
     LoadAnima('assets/BossAtacando.png', 'BossAtacando', 640, 640, this);
     LoadAnima('assets/PlayerAndando.png', 'PlayerAndando', 400, 400, this);
     LoadAnima('assets/AtaqueFeixes.png', 'AtaqueFeixes', 640, 640, this);
+    LoadAnima('assets/BossIdle.png', 'BossIdle', 640, 640, this);
 
 
   }
@@ -95,15 +96,17 @@ const config ={
     CriaAnima(this,12, 11, 0, 'BossAtacando','BossAtacando');
     CriaAnima(this,8, 5, -1, 'PlayerAndando','PlayerAndando');
     CriaAnima(this,7, 13, 0, 'AtaqueFeixes','AtaqueFeixes');
+    CriaAnima(this,6, 3, -1, 'BossIdle','BossIdle');
     
-    player = new Player(this, 400, 300, 'player', 'ataque');
-    boss = new Boss(this, 900, 100, 'boss' , 'ataque');
     plataforms = this.physics.add.staticGroup();
-   
+
     const chao = plataforms.create(this.scale.width/2,this.scale.height,'chao');
     const esquerda = plataforms.create(0,this.scale.height/2,'chao');
     const direita = plataforms.create(this.scale.width /*- 200*/,this.scale.height/2,'chao');
 
+    player = new Player(this, 400, 300, 'player', 'ataque', plataforms);
+    boss = new Boss(this, 900, 100, 'boss' , 'ataque', plataforms);
+  
     this.physics.add.collider(player, plataforms);
     this.physics.add.collider(boss, plataforms);
 
@@ -112,8 +115,8 @@ const config ={
     direita.setVisible(false);
 
     chao.setDisplaySize(this.scale.width,70);
-    esquerda.setDisplaySize(160,this.scale.height);
-    direita.setDisplaySize(160,this.scale.height);
+    esquerda.setDisplaySize(192,this.scale.height);
+    direita.setDisplaySize(192,this.scale.height);
 
     chao.refreshBody();
     esquerda.refreshBody();
