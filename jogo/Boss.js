@@ -4,7 +4,6 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
 
         super(scene, x, y, texture);
 
-        //oi
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
@@ -17,6 +16,7 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
         this.jaDeuDano = false;
         this.escolha;
         this.gambiarra = false;
+        this.escolha2 = 0;
 
         this.barraDeVida = scene.add.graphics();
         this.Barra = scene.add.sprite(300, 300, 'BarraVidaBoss');
@@ -157,7 +157,7 @@ class Boss extends Phaser.Physics.Arcade.Sprite {
             this.PosAtaque(player);
 
                 const ativarHitbox = (animacao, frame) => {
-                    if (frame.index === 3) {
+                    if (frame.index === 7) {
                         this.atq.setVisible(true);
                         this.off('animationupdate', ativarHitbox);
                     }
@@ -192,7 +192,6 @@ acertarPlayer(player) {
         return;
     }
 
-    this.jaDeuDano = true;
 
         if (player.ParryConfig.ParryFoi) {
         player.ParryConfig.ParryJaFoi = 1;
@@ -200,6 +199,7 @@ acertarPlayer(player) {
         player.ParryObj.play('EfeitoParry');
         player.ParryConfig.ParryFoi = true;
         player.ParryConfig.ParryNumero += 1;
+        this.jaDeuDano = true;                  
         player.ParryObj.once('animationcomplete-EfeitoParry', () => {
         player.ParryObj.setVisible(false);
         player.ParryConfig.ParryFoi = false;
@@ -231,7 +231,7 @@ acertarPlayer(player) {
     }
 
 investidaAtaque(player) {
-    if (!this.PodeAtq || this.EstaAtacando) return;
+    if (this.EstaAtacando) return;
 
     this.PodeAtq = false;
     this.EstaAtacando = true;
@@ -352,7 +352,7 @@ investidaAtaque(player) {
     }
 
     xequeMate(player) {
-        if (!this.PodeAtq || this.EstaAtacando) {
+        if (this.EstaAtacando) {
             return;
         }
 
@@ -499,7 +499,7 @@ investidaAtaque(player) {
 
     AtaquePulo(player){
 
-        if (!this.PodeAtq || this.EstaAtacando) {
+        if (this.EstaAtacando) {
 
         return;
 
@@ -804,61 +804,39 @@ VerificarHitboxLancas(player) {
 
     }
 
-    escolherAtaque(player) {
-
+   escolherAtaque(player) {
     if (!this.PodeAtq || this.EstaAtacando) return;
     this.PodeAtq = false;
-        this.scene.time.delayedCall(170, () => {
+    this.scene.time.delayedCall(170, () => {
+        if(player.x > this.x)
+        {
+            this.direcao = +1;
+            this.atq.flipX = false;
+            this.flipX = false;
+            if(this.gambiarra == false) {this.body.setOffset(240, 275)};
+        } else
+        {
+            this.direcao = -1;
+            this.atq.flipX = true;
+            this.flipX = true;
+            if(this.gambiarra == false) this.body.setOffset(335, 275);
+        } 
 
-            if(player.x > this.x)
-                {
-                    this.direcao = +1;
-                    this.atq.flipX = false;
-                    this.flipX = false;
-                    if(this.gambiarra == false) {this.body.setOffset(240, 275)};
-                } else
-                {
-                    this.direcao = -1;
-                    this.atq.flipX = true;
-                    this.flipX = true;
-                    if(this.gambiarra == false) this.body.setOffset(335, 275);
-                } 
+        // removido o "if (this.distanciaX < 300) { this.ataque1(player); }"
+        // agora escolherAtaque só é chamado quando já está fora de alcance de ataque1 (distanciaX > 200)
+        this.escolha = Phaser.Math.Between(0, 3);
 
-        if (this.distanciaX < 300) {
-
-            this.ataque1(player);
-
-        } else if (this.distanciaX < 600) {
-
-            //this.escolha = 1;
-
-            this.escolha = Phaser.Math.Between(0, 3);
-
-            if (this.escolha === 0) {
-
-                this.investidaAtaque(player);
-
-            } else if (this.escolha === 1) {
-
-                this.xequeMate(player);
-
-            } else if(this.escolha === 2){
-
-                this.AtaquePulo(player);
-
-            }else {
-
-                this.investidaAtaque(player);
-
-            }
-
-        } else {
-
+        if (this.escolha === 0) {
             this.investidaAtaque(player);
-
+        } else if (this.escolha === 1) {
+            this.xequeMate(player);
+        } else if(this.escolha === 2){
+            this.AtaquePulo(player);
+        } else {
+            this.investidaAtaque(player);
         }
     });
-    }
+}
 
  morrer(){
     if(this.vida <= 0){
@@ -897,6 +875,7 @@ VerificarHitboxLancas(player) {
     if (this.scene.physics.overlap(this.atq, player)) {
         this.acertarPlayer(player);
             }
+
                 // Enquanto estão voando
             if (this.LancasEstado == 0) {
                 this.AtualizarHitboxLancas();
@@ -909,15 +888,25 @@ VerificarHitboxLancas(player) {
         if (this.EstaAtacando) {
             return;
         }
-        if (this.distanciaX > 200) {
+
+        if (this.distanciaX > 300) {
             if (this.PodeAtq) {
                 this.escolherAtaque(player);
             } else {
                 this.Seguirplayer(player);
             }
         } else {
+
+            this.escolha2 = Phaser.Math.Between(0, 3);
+
+            if(this.escolha2 == 0)
+            {
+                this.escolherAtaque(player);
+            } else {
             this.body.setVelocityX(0);
-            this.ataque1(player);
+            this.ataque1(player); 
+            }
+
             }
                 }
             }

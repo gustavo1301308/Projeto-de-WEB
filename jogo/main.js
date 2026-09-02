@@ -83,7 +83,7 @@ const config ={
     TextoScore = this.add.text(550,30,'Score: ',{fontSize: '64px',fill: '#ee0000'});
     TextoTempo = this.add.text(950,30,'Tempo: ',{fontSize: '64px',fill: '#ee0000'});
 
-    keys = this.input.keyboard.addKeys('W,A,D,F,E,F,SHIFT');
+    keys = this.input.keyboard.addKeys('W,A,D,F,E,Q,SHIFT');
     space = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     mouse = this.input.activePointer;
 
@@ -92,7 +92,7 @@ const config ={
     CriaAnima(this, 8, 3, -1, 'PlayerIdle', 'PlayerIdle');
     CriaAnima(this, 5, 3, -1, 'BossAndando', 'BossAndando');
     CriaAnima(this,15, 4, 0, 'AnimacaoAtq','AnimacaoAtq');
-    CriaAnima(this,9, 7, 0, 'BossAtacando','BossAtacando');
+    CriaAnima(this,12, 11, 0, 'BossAtacando','BossAtacando');
     CriaAnima(this,8, 5, -1, 'PlayerAndando','PlayerAndando');
     CriaAnima(this,7, 13, 0, 'AtaqueFeixes','AtaqueFeixes');
     

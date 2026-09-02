@@ -32,6 +32,7 @@ class Player extends Phaser.Physics.Arcade.Sprite{
       this.Direcao = 1;
       this.VidaAntiga = 0;
       this.jadeudano = false;
+      this.ProjetilCooldown = 0;
 
       this.CliqueAtaque = false; // flag setada pelo evento, consumida no update
 
@@ -134,7 +135,33 @@ class Player extends Phaser.Physics.Arcade.Sprite{
   }
   }
 
+ataqueprojetil(keys) {
+
+    if (keys.Q.isDown) {
+
+        let projetil = this.scene.physics.add.sprite(this.x + (60 * this.Direcao),this.y,'Projetil'
+        );
+        projetil.body.setAllowGravity(false);
+
   
+        projetil.setVelocityX(800 * this.Direcao);
+
+        projetil.setFlipX(this.Direcao == -1);
+        projetil.setCollideWorldBounds(false);
+
+        this.scene.physics.world.on('worldstep', () => {
+
+            if (
+                projetil.x < 0 ||
+                projetil.x > this.scene.physics.world.bounds.width
+            ) {
+                projetil.destroy();
+            }
+
+        });
+    }
+}
+
 ataque(mouse)
 {
     if(this.CliqueAtaque && this.AtaqueConfig.AtaqueWait == 0)
@@ -373,7 +400,7 @@ Parry(keys, boss, mouse) {
   update(keys,space,mouse,boss, delta)
 
   {
-
+  this.ataqueprojetil(keys)
   this.movimento(keys, space);
   this.ataque(mouse);
   this.Dash(keys);
